@@ -4,7 +4,17 @@
  */
 package forme;
 
+import java.awt.Point;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 import javax.swing.JTable;
+import komunikacija.Komunikacija;
+import model.SkriveniBroj;
+import operacija.Operacije;
+import transfer.KlijentskiZahtev;
+import transfer.ServerskiOdgovor;
 
 /**
  *
@@ -89,10 +99,51 @@ public class KlijentskaForma extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseClicked
-        // TODO add your handling code here:
+  
         //na klik misa ja zelim da mi se pokupi koji su red i kolona selektovani
         JTable tabela = (JTable)evt.getSource(); // dobija model tabele preko getSOurce
+        Point point = evt.getPoint(); // rezultat su koordinate tog eventa koji je prosledjen 
+        int red = tabela.rowAtPoint(point); // koordinata reda
+        int kolona = tabela.columnAtPoint(point); // koordinata kolone
         
+        
+        if(red!=-1 && kolona!=-1){
+            System.out.println("RED: "+red+" "+" KOLONA: "+kolona);
+            
+        
+        //kada smo izvukli koordinate broja, sada treba da utvrdimo da li na tim koordinatama postoji neki broj. POTREBNO JE
+        //KREIRATI KLIJENTSKI ZAHTEV. On kaze:"Proveri mi da li na ovim koordinatama postoji neki broj. "
+        
+        //(1) KREIRANJE KLIJENTSKOG ZAHTEVA
+            
+            KlijentskiZahtev kz = new KlijentskiZahtev();
+            kz.setOperacija(Operacije.POGODI_BROJ);
+            SkriveniBroj sb = new SkriveniBroj(kolona,red,-1);
+            kz.setParam(sb);
+
+   
+                // (2)  POSALJI NAPRAVLJENI ZAHTEV.
+                // metoda na soketu na portu 9000 ispisuje zahtev
+                
+                Komunikacija.getInstance().posaljiZahtev(kz); // to je onaj trenukat serveerskiSocket.accept() kada je klijent povezan
+            
+            
+                ServerskiOdgovor so = Komunikacija.getInstance().primiOdgovor();
+            
+               
+                sb = (SkriveniBroj) so.getOdgovor(); // rezultat je odgovor u obliku skrivenog broja.
+       // JTable model = (JTable) evt.getSource();
+            if(sb == null){
+                tabela.setValueAt(-1, red, kolona);
+            }else{
+                tabela.setValueAt(sb.getVrednost(), red, kolona);
+            }
+            brojPokusaja++;
+            
+            //JOptionPane.showMessageDialog(null,"IGUBILI STE", "Kraj igre.",JOptionPane.INFORMATION_MESSAGE);
+            
+        
+        }
     }//GEN-LAST:event_jTable1MouseClicked
 
     /**
